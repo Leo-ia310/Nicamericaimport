@@ -115,6 +115,16 @@ const products = [
     description: "Frijol rojo de alta calidad, cultivado en Nicaragua y seleccionado por su sabor, rendimiento, suavidad y tradición.",
     presentation: "50 lb",
     image: "assets/products/frijol-rojo-seda.jpeg"
+  },
+  {
+    id: "yuca-congelada",
+    name: "Yuca Congelada",
+    brand: "Nicamerica",
+    category: "Productos Congelados",
+    origin: "Producto de Nicaragua",
+    description: "Yuca pelada y cortada, empacada para mantener frescura y practicidad en cocina.",
+    presentation: "Consulta disponibilidad",
+    image: "assets/products/yuca-congelada.jpg"
   }
 ];
 
@@ -179,7 +189,7 @@ function productCard(product) {
   button.dataset.category = product.category;
   button.setAttribute("aria-label", `Ver detalle de ${product.name}`);
   const media = product.image
-    ? `<img src="${product.image}" alt="${product.name}${product.brand ? " - " + product.brand : ""}" loading="lazy">`
+    ? `<img src="${product.image}" alt="${product.name}${product.brand ? " - " + product.brand : ""}" loading="lazy" decoding="async">`
     : `<div class="product-media-placeholder"><span class="material-symbols-outlined" aria-hidden="true">${product.icon || "inventory_2"}</span><strong>Imagen pendiente</strong></div>`;
   button.innerHTML = `
     <div class="product-media">${media}</div>
@@ -345,7 +355,7 @@ function setupCatalogThumbs() {
   document.querySelectorAll(".catalog-thumb").forEach((thumb) => {
     thumb.addEventListener("click", () => {
       const panel = thumb.closest(".catalog-visual-panel");
-      const mainImage = panel?.querySelector(".catalog-main-photo");
+      const mainImage = panel?.querySelector("img.catalog-main-photo");
       const nextSrc = thumb.dataset.largeSrc;
       const nextAlt = thumb.dataset.largeAlt || thumb.querySelector("img")?.alt || "";
 
@@ -364,18 +374,87 @@ function setupCatalogThumbs() {
   });
 }
 
+function setupMediaPerformance() {
+  document.querySelectorAll("img").forEach((image) => {
+    image.decoding = "async";
+
+    if (
+      !image.hasAttribute("loading") &&
+      !image.closest(".brand, .footer-logo-lockup") &&
+      !image.closest(".hero, .page-hero")
+    ) {
+      image.loading = "lazy";
+    }
+  });
+}
+
+function setupHeroCarouselImages() {
+  const slides = document.querySelectorAll(".hero-carousel-slide[data-bg]");
+  if (!slides.length) return;
+
+  const loadSlides = () => {
+    slides.forEach((slide, index) => {
+      window.setTimeout(() => {
+        slide.style.backgroundImage = `url("${slide.dataset.bg}")`;
+        slide.removeAttribute("data-bg");
+      }, index * 220);
+    });
+  };
+
+  if (document.readyState === "complete") {
+    window.setTimeout(loadSlides, 500);
+  } else {
+    window.addEventListener("load", () => window.setTimeout(loadSlides, 500), { once: true });
+  }
+}
+
 function setupAmbientVideos() {
-  document.querySelectorAll(".catalog-main-video--ambient").forEach((video) => {
+  const videos = document.querySelectorAll(".catalog-main-video--ambient");
+
+  const loadVideo = (video) => {
+    if (!video.dataset.loaded) {
+      video.querySelectorAll("source[data-src]").forEach((source) => {
+        source.src = source.dataset.src;
+      });
+      video.dataset.loaded = "true";
+      video.load();
+    }
+
+    video.play().catch(() => {});
+  };
+
+  videos.forEach((video) => {
     video.controls = false;
     video.muted = true;
     video.loop = true;
+    video.preload = "none";
     video.setAttribute("tabindex", "-1");
     video.addEventListener("contextmenu", (event) => event.preventDefault());
     video.addEventListener("pause", () => {
-      if (!video.ended) video.play().catch(() => {});
+      if (video.dataset.inView === "true" && !video.ended) video.play().catch(() => {});
     });
-    video.play().catch(() => {});
   });
+
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(loadVideo);
+    return;
+  }
+
+  const videoObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const video = entry.target;
+
+      if (entry.isIntersecting) {
+        video.dataset.inView = "true";
+        loadVideo(video);
+      } else {
+        video.dataset.inView = "false";
+        video.pause();
+      }
+    });
+  }, { rootMargin: "240px 0px", threshold: 0.01 });
+
+  videos.forEach((video) => videoObserver.observe(video));
 }
 
 function setupPlantCarousel() {
@@ -416,6 +495,8 @@ function setupPlantCarousel() {
 renderFeatured();
 renderFilters();
 renderProducts();
+setupMediaPerformance();
+setupHeroCarouselImages();
 setupCatalogThumbs();
 setupAmbientVideos();
 setupPlantCarousel();

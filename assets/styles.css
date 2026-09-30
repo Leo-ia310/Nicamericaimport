@@ -4647,34 +4647,6 @@ textarea::placeholder {
   background-image: url("plant/hero-plant-pour.jpg");
 }
 
-.hero-home .hero-carousel-slide--curd {
-  background-image: url("plant/hero-plant-curd.jpg");
-}
-
-.hero-home .hero-carousel-slide--team {
-  background-image: url("plant/hero-plant-team.jpg");
-}
-
-.hero-home .hero-carousel-slide--process {
-  background-image: url("plant/hero-plant-process.jpg");
-}
-
-.hero-home .hero-carousel-slide--cheese {
-  background-image: url("plant/hero-plant-cheese.jpg");
-}
-
-.hero-home .hero-carousel-slide--water {
-  background-image: url("plant/hero-plant-water.jpg");
-}
-
-.hero-home .hero-carousel-slide--control {
-  background-image: url("plant/hero-plant-control.jpg");
-}
-
-.hero-home .hero-carousel-slide--table {
-  background-image: url("plant/hero-plant-table.jpg");
-}
-
 @keyframes homeHeroCarousel {
   0%,
   8% {
@@ -5387,6 +5359,13 @@ body[data-page="inicio"] .featured-section .catalog-product-info[open] {
 
 body[data-page="catalogo"] .catalog-main-video {
   object-fit: cover;
+}
+
+.catalog-main-video--vertical {
+  width: min(100%, 360px);
+  max-height: 560px;
+  aspect-ratio: 9 / 16;
+  justify-self: center;
 }
 
 .catalog-main-video--ambient {
